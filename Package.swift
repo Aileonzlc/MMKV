@@ -35,6 +35,10 @@ let package = Package(
         .library(
             name: "MMKV",
             targets: ["MMKV"]),
+        .library(
+            name: "MMKV-dynamic",
+            type: .dynamic,
+            targets: ["MMKV"]),
         .executable(
             name: "Test",
             targets: ["Test"]
