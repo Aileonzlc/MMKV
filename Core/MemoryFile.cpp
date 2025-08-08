@@ -93,10 +93,15 @@ bool File::open() {
     if (isFileValid()) {
         return true;
     }
-    m_fd = ::open(m_path.c_str(), OpenFlag2NativeFlag(m_flag), S_IRWXU);
+//    m_fd = ::open(m_path.c_str(), OpenFlag2NativeFlag(m_flag), S_IRWXU);
+    m_fd = ::open(m_path.c_str(), OpenFlag2NativeFlag(m_flag), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     if (!isFileValid()) {
         MMKVError("fail to open [%s], flag %x, %d(%s)", m_path.c_str(), m_flag, errno, strerror(errno));
         return false;
+    }
+    // 显式设置权限（忽略 umask 影响）
+    if (m_fd >= 0) {
+        fchmod(m_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     }
     MMKVInfo("open fd[%p], flag %x, %s", m_fd, m_flag, m_path.c_str());
     return true;
@@ -326,7 +331,8 @@ LContinue:
 extern bool mkPath(const MMKVPath_t &str) {
     auto path = [NSString stringWithUTF8String:str.c_str()];
     NSError *error = nil;
-    auto ret = [[NSFileManager defaultManager] createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:&error];
+//    auto ret = [[NSFileManager defaultManager] createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:&error];
+    auto ret = [[NSFileManager defaultManager] createDirectoryAtPath:path withIntermediateDirectories:YES attributes:@{NSFilePosixPermissions: @(0777)} error:&error];
     if (!ret) {
         MMKVWarning("%s", error.localizedDescription.UTF8String);
         return false;
